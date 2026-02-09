@@ -2,12 +2,18 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { BillAnalysis, FileData } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
-
 export const analyzeBillSource = async (
   text?: string, 
   file?: FileData
 ): Promise<BillAnalysis> => {
+  const apiKey = process.env.API_KEY;
+  
+  if (!apiKey) {
+    throw new Error("API_KEY_MISSING: Please check your environment variables in Vercel.");
+  }
+
+  // Create a fresh instance for the call
+  const ai = new GoogleGenAI({ apiKey });
   const parts: any[] = [];
 
   if (text) {
@@ -21,7 +27,7 @@ export const analyzeBillSource = async (
         mimeType: file.mimeType
       }
     });
-    parts.push({ text: "Read the attached document (it might be a scan or PDF) and analyze the legislative content within it." });
+    parts.push({ text: "Read the attached document and analyze the legislative content." });
   }
 
   const response = await ai.models.generateContent({
@@ -33,15 +39,11 @@ export const analyzeBillSource = async (
       
       Requirements:
       1. summary: A concise 1-sentence 'vibe check' of the bill.
-      2. detailedSummary: A comprehensive, structured breakdown. Use bullet points. Cover: 
-         - Main Objective: What is this bill trying to achieve?
-         - Key Provisions: List the most important changes/rules.
-         - Timeline: When does this take effect?
-         - Red Flags: What should the public be worried about?
+      2. detailedSummary: A comprehensive, structured breakdown. Use bullet points.
       3. impactCards: Identify 3 specific impact areas.
-      4. quiz: Create exactly 3 multiple-choice questions with a PROGRESSIVE DIFFICULTY curve (Easy, Medium, Hard).
+      4. quiz: Create exactly 3 multiple-choice questions with a PROGRESSIVE DIFFICULTY curve.
       
-      Use local examples (e.g., M-Pesa, fuel at Shell/Rubis, rent in Roysambu, cost of 1kg sugar).
+      Use local examples (e.g., M-Pesa, fuel at Shell/Rubis, rent in Roysambu).
       Tone: Informative, empathetic, slightly witty but respectful.`,
       responseMimeType: "application/json",
       responseSchema: {
@@ -86,5 +88,10 @@ export const analyzeBillSource = async (
     },
   });
 
-  return JSON.parse(response.text.trim()) as BillAnalysis;
+  const textOutput = response.text;
+  if (!textOutput) {
+    throw new Error("EMPTY_RESPONSE: The AI could not process this document.");
+  }
+
+  return JSON.parse(textOutput.trim()) as BillAnalysis;
 };
