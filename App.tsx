@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { AppState, BillAnalysis, FileData } from './types';
 import { analyzeBillSource } from './services/geminiService';
 import Layout from './components/Layout';
