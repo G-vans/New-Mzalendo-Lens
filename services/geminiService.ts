@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { BillAnalysis, FileData } from "../types";
 
@@ -11,7 +10,7 @@ const schema = {
     },
     detailedSummary: {
       type: Type.STRING,
-      description: "A comprehensive, 300-word breakdown of the bill's implications.",
+      description: "A comprehensive breakdown of the bill's implications.",
     },
     impactCards: {
       type: Type.ARRAY,
@@ -40,7 +39,7 @@ const schema = {
             items: { type: Type.STRING }
           },
           correctIndex: { type: Type.NUMBER },
-          explanation: { type: Type.STRING, description: "A witty, educational explanation of why this answer is correct." }
+          explanation: { type: Type.STRING, description: "A witty, educational explanation." }
         },
         required: ["question", "options", "correctIndex", "explanation"]
       }
@@ -53,15 +52,10 @@ export const analyzeBillSource = async (
   text?: string, 
   file?: FileData
 ): Promise<BillAnalysis> => {
-  const apiKey = process.env.API_KEY;
+  // Use process.env.API_KEY directly as required by the SDK guidelines
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  if (!apiKey || apiKey === "undefined") {
-    throw new Error("API Key is missing from build. Please redeploy on Vercel after setting the API_KEY variable.");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
-  
-  const promptParts = [];
+  const promptParts: any[] = [];
   if (text) promptParts.push({ text: `Analyze this text: ${text}` });
   if (file) {
     promptParts.push({
@@ -72,8 +66,9 @@ export const analyzeBillSource = async (
     });
   }
   
-  // Add base instructions
-  promptParts.push({ text: "Break this bill down. Focus on how it affects young Kenyans (taxes, digital services, fuel, cost of living). Use a witty but informative tone." });
+  promptParts.push({ 
+    text: "Break this bill down for young Kenyans. Use a witty, informative tone. Focus on cost of living and digital rights." 
+  });
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
@@ -81,21 +76,21 @@ export const analyzeBillSource = async (
     config: {
       responseMimeType: "application/json",
       responseSchema: schema,
-      systemInstruction: "You are 'Mzalendo AI', a savvy Kenyan civic educator. You translate complex government bills into plain, punchy language that Gen Z Kenyans can understand and act upon."
+      systemInstruction: "You are 'Mzalendo AI', a savvy Kenyan civic educator translating complex bills into plain, punchy language for Gen Z."
     },
   });
 
   const rawText = response.text;
   if (!rawText) {
-    throw new Error("The AI returned an empty response. This might be due to safety filters on the document content.");
+    throw new Error("The AI returned an empty response. Check if content violates safety filters.");
   }
 
   try {
-    // Some models might still include markdown blocks despite the mimeType setting
+    // Robustly handle cases where the model might wrap JSON in markdown blocks
     const cleanedJson = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
     return JSON.parse(cleanedJson) as BillAnalysis;
   } catch (e) {
-    console.error("JSON Parse Error:", rawText);
-    throw new Error("Failed to decode the analysis. The bill might be too fragmented.");
+    console.error("JSON Parse Error. Raw response:", rawText);
+    throw new Error("Failed to decode the analysis. The bill segment might be too complex or fragmented.");
   }
 };
