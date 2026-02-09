@@ -6,13 +6,13 @@ export const analyzeBillSource = async (
   text?: string, 
   file?: FileData
 ): Promise<BillAnalysis> => {
+  // Using a local variable to ensure the definition from vite.config.ts is captured
   const apiKey = process.env.API_KEY;
   
-  if (!apiKey) {
-    throw new Error("API_KEY_MISSING: Please check your environment variables in Vercel.");
+  if (!apiKey || apiKey === "undefined") {
+    throw new Error("API_KEY_MISSING: The API key is not configured in the environment.");
   }
 
-  // Create a fresh instance for the call
   const ai = new GoogleGenAI({ apiKey });
   const parts: any[] = [];
 
@@ -36,14 +36,7 @@ export const analyzeBillSource = async (
     config: {
       systemInstruction: `You are a savvy Kenyan civic educator. 
       Your goal is to explain complex legislation in 'Gen-Z' and 'Early Professional' Kenyan language. 
-      
-      Requirements:
-      1. summary: A concise 1-sentence 'vibe check' of the bill.
-      2. detailedSummary: A comprehensive, structured breakdown. Use bullet points.
-      3. impactCards: Identify 3 specific impact areas.
-      4. quiz: Create exactly 3 multiple-choice questions with a PROGRESSIVE DIFFICULTY curve.
-      
-      Use local examples (e.g., M-Pesa, fuel at Shell/Rubis, rent in Roysambu).
+      Requirements: 1. summary (1 sentence), 2. detailedSummary (structured), 3. impactCards (exactly 3), 4. quiz (exactly 3).
       Tone: Informative, empathetic, slightly witty but respectful.`,
       responseMimeType: "application/json",
       responseSchema: {

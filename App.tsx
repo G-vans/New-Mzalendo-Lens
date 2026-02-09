@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { AppState, BillAnalysis, FileData } from './types';
 import { analyzeBillSource } from './services/geminiService';
@@ -32,7 +31,7 @@ const AboutModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen
           <section>
             <h4 className="font-black text-green-600 uppercase tracking-widest text-xs mb-3">The Math</h4>
             <p className="text-slate-800 font-mono bg-slate-50 p-4 rounded-2xl italic">
-              C (Complexity) > T (Time) × L (Literacy) ⇒ Civic Apathy
+              C (Complexity) &gt; T (Time) × L (Literacy) ⇒ Civic Apathy
             </p>
           </section>
 
