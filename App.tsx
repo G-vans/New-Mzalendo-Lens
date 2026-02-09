@@ -4,10 +4,65 @@ import { AppState, BillAnalysis, FileData } from './types';
 import { analyzeBillSource } from './services/geminiService';
 import Layout from './components/Layout';
 
+const AboutModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="bg-white w-full max-w-2xl max-h-[85vh] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col border-8 border-white animate-in zoom-in-95 duration-300">
+        <div className="p-8 border-b-2 border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <h3 className="text-2xl font-black text-slate-900 italic uppercase">Project Story</h3>
+          <button 
+            onClick={onClose}
+            className="w-10 h-10 bg-white border-2 border-slate-200 rounded-2xl flex items-center justify-center hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all"
+          >
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div className="flex-grow overflow-y-auto p-10 text-left space-y-8">
+          <section>
+            <h4 className="font-black text-green-600 uppercase tracking-widest text-xs mb-3">Inspiration</h4>
+            <p className="text-slate-700 leading-relaxed">The 2024 Finance Bill in Kenya revealed a massive <strong>"Density Gap"</strong>: while legislation affects the youth the most, it is written in a language designed to exclude them. We built a bridge between dense government gazettes and the digital-native generation.</p>
+          </section>
+          
+          <section>
+            <h4 className="font-black text-green-600 uppercase tracking-widest text-xs mb-3">The Build</h4>
+            <p className="text-slate-700 leading-relaxed">Built with <strong>React 19</strong>, <strong>Tailwind CSS</strong>, and <strong>Gemini 3 Flash</strong>. We used Gemini's multimodal capabilities to ensure a grainy photo of a physical gazette notice is just as readable as a digital PDF.</p>
+          </section>
+
+          <section>
+            <h4 className="font-black text-green-600 uppercase tracking-widest text-xs mb-3">The Math</h4>
+            <p className="text-slate-800 font-mono bg-slate-50 p-4 rounded-2xl italic">
+              C (Complexity) > T (Time) × L (Literacy) ⇒ Civic Apathy
+            </p>
+          </section>
+
+          <section>
+            <h4 className="font-black text-green-600 uppercase tracking-widest text-xs mb-3">Built With</h4>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {['React 19', 'TypeScript', 'Tailwind CSS', 'Google Gemini API', 'Gemini 3 Flash', 'Structured JSON Output'].map(tech => (
+                <span key={tech} className="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-500 uppercase">{tech}</span>
+              ))}
+            </div>
+          </section>
+        </div>
+        <div className="p-8 bg-slate-50/80 border-t-2 border-slate-100">
+          <button 
+            onClick={onClose}
+            className="w-full py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-[0_4px_0_0_rgba(0,0,0,1)] active:shadow-none active:translate-y-1"
+          >
+            Back to the Mission
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const StartScreen: React.FC<{ 
   onAnalyze: (text?: string, file?: FileData) => void, 
+  onOpenAbout: () => void,
   isLoading: boolean 
-}> = ({ onAnalyze, isLoading }) => {
+}> = ({ onAnalyze, onOpenAbout, isLoading }) => {
   const [text, setText] = useState('');
   const [file, setFile] = useState<FileData | null>(null);
   const [fileName, setFileName] = useState<string>('');
@@ -37,9 +92,18 @@ const StartScreen: React.FC<{
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="mb-8">
-        <h2 className="text-3xl font-extrabold text-slate-900 mb-3 italic tracking-tight">Knowledge is your <span className="text-green-600">Shield.</span></h2>
-        <p className="text-slate-600 text-lg">Paste a section or upload a scan/PDF. We'll decode the legalese for you.</p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h2 className="text-3xl font-extrabold text-slate-900 mb-3 italic tracking-tight">Knowledge is your <span className="text-green-600">Shield.</span></h2>
+          <p className="text-slate-600 text-lg">Paste a section or upload a scan/PDF. We'll decode the legalese for you.</p>
+        </div>
+        <button 
+          onClick={onOpenAbout}
+          className="w-12 h-12 bg-white border-2 border-slate-100 rounded-2xl flex items-center justify-center text-xl shadow-sm hover:shadow-md hover:border-green-200 transition-all"
+          title="About the Project"
+        >
+          💡
+        </button>
       </div>
 
       <div className="bg-white rounded-[2.5rem] p-6 shadow-xl shadow-slate-200/50 border-2 border-slate-100">
@@ -386,6 +450,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [finalScore, setFinalScore] = useState(0);
+  const [showAbout, setShowAbout] = useState(false);
 
   const handleAnalyze = async (text?: string, file?: FileData) => {
     setLoading(true);
@@ -421,6 +486,8 @@ export default function App() {
 
   return (
     <Layout stepName={getStepName()} onReset={handleReset}>
+      <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
+      
       {error && (
         <div className="mb-8 p-6 bg-red-50 border-4 border-red-200 text-red-600 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.3em] flex items-center gap-4 animate-in shake-animation">
           <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center text-white text-lg">!</div>
@@ -429,7 +496,7 @@ export default function App() {
       )}
 
       {state === AppState.START && (
-        <StartScreen onAnalyze={handleAnalyze} isLoading={loading} />
+        <StartScreen onAnalyze={handleAnalyze} onOpenAbout={() => setShowAbout(true)} isLoading={loading} />
       )}
 
       {state === AppState.BREAKDOWN && analysis && (
