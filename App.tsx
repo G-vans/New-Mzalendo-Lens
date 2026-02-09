@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef } from 'react';
 import { AppState, BillAnalysis, FileData } from './types';
 import { analyzeBillSource } from './services/geminiService';
@@ -31,7 +32,7 @@ const AboutModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen
           <section>
             <h4 className="font-black text-green-600 uppercase tracking-widest text-xs mb-3">The Math</h4>
             <p className="text-slate-800 font-mono bg-slate-50 p-4 rounded-2xl italic">
-              C (Complexity) &gt; T (Time) × L (Literacy) ⇒ Civic Apathy
+              {"C (Complexity) > T (Time) × L (Literacy) ⇒ Civic Apathy"}
             </p>
           </section>
 
@@ -458,9 +459,11 @@ export default function App() {
       const result = await analyzeBillSource(text, file);
       setAnalysis(result);
       setState(AppState.BREAKDOWN);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("SYSTEM OVERLOAD: Bill complexity exceeded limits. Try a clearer scan.");
+      // Capture more helpful error information
+      const errorMessage = err.message || "An unexpected error occurred.";
+      setError(`ANALYSIS FAILED: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -490,7 +493,10 @@ export default function App() {
       {error && (
         <div className="mb-8 p-6 bg-red-50 border-4 border-red-200 text-red-600 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.3em] flex items-center gap-4 animate-in shake-animation">
           <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center text-white text-lg">!</div>
-          {error}
+          <div className="flex-1">
+            <p className="font-black">SYSTEM ERROR</p>
+            <p className="normal-case font-medium text-slate-600 text-[12px]">{error}</p>
+          </div>
         </div>
       )}
 
