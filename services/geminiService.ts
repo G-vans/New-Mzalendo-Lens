@@ -52,8 +52,12 @@ export const analyzeBillSource = async (
   text?: string, 
   file?: FileData
 ): Promise<BillAnalysis> => {
-  // Use process.env.API_KEY directly as required by the SDK guidelines
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Use import.meta.env.VITE_API_KEY for Vite (browser-accessible env vars must be prefixed with VITE_)
+  const apiKey = import.meta.env.VITE_API_KEY;
+  if (!apiKey) {
+    throw new Error("API key is missing. Please set VITE_API_KEY in your .env.local file.");
+  }
+  const ai = new GoogleGenAI({ apiKey });
   
   const promptParts: any[] = [];
   if (text) promptParts.push({ text: `Analyze this text: ${text}` });
